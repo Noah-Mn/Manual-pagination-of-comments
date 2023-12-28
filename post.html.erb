@@ -1,0 +1,376 @@
+-- Your card for comment section here
+<div class="card mt-8 mb-8">
+                      <div class="card-header pt-4">
+                        <div class="d-flex align-items-center">
+                          <!--begin::Avatar-->
+                          <% if forum_post.post.created_by == current_user.alumni.alumni_id %>
+                            <div class="symbol symbol-50px symbol-circle me-5" style="object-fit: cover;">
+                              <% if current_user.profile_picture.attached? %>
+                                <%= image_tag current_user.profile_picture %>
+                              <% else %>
+                                <img src="/assets/images/icons/man-user.png" alt="user">
+                              <% end %>
+                            </div>
+                            <div class="flex-grow-1">
+                              <!--begin::Name-->
+                              <div class="row align-items-center">
+
+                                <p class="text-gray-800 fs-4 d-flex align-items-center gap-2 mt-5">
+                                  <a href="#" class="fw-bold text-gray-800 text-hover-primary d-flex align-items-center gap-1">
+                                    You
+                                  </a>
+                                  <i class="ki-duotone ki-double-right fs-2 rotate-180">
+                                    <span class="path1"></span>
+                                    <span class="path2"></span>
+                                  </i>
+                                  <a href="<%= forum_path(id: forum.forum_id) %>" class="fw-bold  text-hover-primary">
+                                    <%= forum.forum_name %></a> forum
+                                </p>
+
+                                <span class="text-gray-400 fw-semibold d-block">
+                                    <%= forum_post.post.created_at.strftime("%d %B, %Y") %>
+                                  </span>
+                              </div>
+                            </div>
+                          <% else %>
+                            <% @alumni.each do |alumnus| %>
+                              <% if alumnus.alumni_id == forum_post.post.created_by %>
+                                <div class="symbol symbol-50px symbol-circle me-5" style="object-fit: cover;">
+                                  <% if alumnus.user.profile_picture.attached? %>
+                                    <%= image_tag alumnus.user.profile_picture %>
+                                  <% else %>
+                                    <img src="/assets/images/icons/man-user.png" alt="user">
+                                  <% end %>
+                                </div>
+                                <div class="flex-grow-1">
+                                  <!--begin::Name-->
+                                  <div class="row align-items-center">
+                                    <p class="text-gray-800 fs-4 d-flex align-items-center gap-2 mt-5">
+                                      <a href="#" class="fw-bold text-gray-800 text-hover-primary d-flex align-items-center gap-1">
+                                        <%= alumnus.first_name %><%= alumnus.surname %>
+
+                                        <i class="ki-duotone ki-double-right fs-2 rotate-180">
+                                          <span class="path1"></span>
+                                          <span class="path2"></span>
+                                        </i>
+                                      </a>
+                                      <a href="<%= forum_path(id: forum.forum_id) %>" class="fw-bold  text-hover-primary">
+                                        <%= forum.forum_name %></a> forum
+                                    </p>
+                                    <span class="text-gray-400 fw-semibold d-block">
+                                    <%= forum_post.post.created_at.strftime("%d %B, %Y") %>
+                                  </span>
+                                  </div>
+                                </div>
+                              <% end %>
+                            <% end %>
+                          <% end %>
+                        </div>
+                      </div>
+                      <div class="card-body">
+                        <div class="fs-5 fw-normal text-gray-900">
+                          <%= forum_post.post.content %>
+                        </div>
+                      </div>
+                      <div class="card-footer pb-4 pt-0">
+                        <ul class="nav py-3">
+                          <li class="nav-item">
+                            <a class="nav-link btn btn-sm btn-color-gray-600 btn-active-color-primary btn-active-light-primary fw-bold px-4 me-1 collapsible collapsed" data-bs-toggle="collapse" href="#kt_social_feeds_comments_1" aria-expanded="false">
+                              <i class="ki-duotone ki-message-text-2 fs-2 me-1"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+                              <span comments-count-id="<%= forum_post.forum_post_id.to_json %>">
+                                 <%= "#{forum_post.post_comments.count} #{'Comment'.pluralize(forum_post.post_comments.count)}" %>
+                               </span>
+                            </a>
+                          </li>
+                          <li class="nav-item">
+                            <%= form_with(url: like_forum_post_url(id: forum.forum_id, forum_post_id: forum_post.forum_post_id), method: "POST", html: { class: "position-relative likePostsForm" }, remote: true) do |form| %>
+                              <%= form.hidden_field :authenticity_token, value: form_authenticity_token %>
+                              <%= form.hidden_field "post_like[forum_post_id]", value: forum_post.forum_post_id %>
+                              <%= form.hidden_field "post_like[liked_or_disliked]", value: current_user.alumni.likes_forum_post?(forum_post) ? false : true %>
+                              <div class="d-flex align-items-center ms-4">
+                                <% post_like = current_user.alumni.post_like.find_by(forum_post_id: forum_post.forum_post_id) %>
+                                <button class="btn btn-icon btn-sm <%= post_like&.like_or_dislike == 'LIKE' ? 'btn-color-primary' : 'btn-color-gray-600' %> w-25px p-0 me-1 like-button" data-forum-post-id="<%= forum_post.forum_post_id %>" data-url="<%= like_forum_post_path(id: forum.forum_id, forum_post_id: forum_post.forum_post_id) %>" data-method="POST" id="like-button-<%= forum_post.forum_post_id %>">
+                                  <i class="ki-duotone ki-heart fs-2 me-1"><span class="path1"></span><span class="path2"></span></i>
+                                </button>
+                                <a class="text-gray-600 fw-bold">
+                                    <span data-post-count-id="postsLikeCount">
+                                    <%= @post_likes.count { |post_like| post_like[:forum_post_id] == forum_post[:forum_post_id] && post_like[:like_or_dislike] == 'LIKE' } %>
+                                    </span>
+                                  <span data-like-text-id="postsLikeText">
+                                      <%= "Like".pluralize(@post_likes.count { |post_like| post_like[:forum_post_id] == forum_post[:forum_post_id] && post_like[:like_or_dislike] == 'LIKE' }) %>
+                                    </span>
+                                </a>
+                              </div>
+                            <% end %>
+                          </li>
+                        </ul>
+                        <div class="separator separator-solid mb-1"></div>
+
+                        <div class="collapsible show" data-comments-container-id="<%= forum_post.forum_post_id.to_json %>">
+                          <button class="btn btn-secondary btn-sm"  data-current-page="0" data-forum-post-id="<%= forum_post.forum_post_id.to_json %>" id="show-previous-comments-button-<%= forum_post.forum_post_id %>">
+                            Show previous comments
+                          </button>
+
+                          <div class="pb-3" data-previous-comments-id="<%= forum_post.forum_post_id.to_json %>">
+
+                          </div>
+                          <button class="d-none btn btn-secondary btn-sm" data-forum-post-id="<%= forum_post.forum_post_id.to_json %>" id="show-recent-comments-button-<%= forum_post.forum_post_id %>" onclick="loadInitialComments()">
+                            Go to recent comments
+                          </button>
+                        </div>
+                        <div class="d-flex align-items-center mt-5 w-100">
+                          <div class="d-flex pt-1 pb-1">
+                            <div class="symbol symbol-40px symbol-circle me-5" style="object-fit: cover;">
+                              <% if current_user.profile_picture.attached? %>
+                                <%= image_tag current_user.profile_picture %>
+                              <% else %>
+                                <img src="/assets/images/icons/man-user.png" alt="user">
+                              <% end %>
+                            </div>
+                          </div>
+
+                          <%= form_with(url: comment_path(id: forum.forum_id), method: "POST", data: { forum_id: forum.forum_id }, html: { class: "position-relative w-100 postsCommentForm", onsubmit: "saveScrollPosition();" }, remote: true) do |form| %>
+                            <%= form.hidden_field :authenticity_token, value: form_authenticity_token %>
+                            <%= form.hidden_field "post_comment[created_by]", value: current_user.alumni.alumni_id %>
+                            <%= form.hidden_field "post_comment[forum_post_id]", value: forum_post[:forum_post_id] %>
+                            <%= form.hidden_field "forum_post[forum_post_id]", value: forum_post.forum_post_id %>
+                            <%= form.hidden_field "post[post_id]", value: forum_post[:post_id] %>
+
+                            <%= form.text_area "post_comment[comment]", id: "comment-input", class: "form-control form-control-solid border ps-5", rows: 1, data: { "kt-autosize" => "true", "comment-area-id" => forum_post.forum_post_id }, placeholder: "Write your comment..", required: true %>
+
+                            <div class=" d-flex position-absolute top-0 end-0 translate-middle-x mt-1">
+                              <%= form.button type: "submit", class: "btn btn-icon btn-sm btn-color-primary w-25px p-0", id: "send-button" do %>
+                                <i class="fas fa-paper-plane" style="transform: rotate(45deg); font-size: 22px;"></i>
+                              <% end %>
+                              <%= link_to forum_post_path(id: forum_post.forum_id, forum_post_id: forum_post.id) do %>
+                              <% end %>
+                            </div>
+                          <% end %>
+
+
+                          <!--                              <button type="submit" class="btn btn-icon btn-sm btn-color-primary w-25px p-0" id="send-button">-->
+                          <!--                                <i class="fas fa-paper-plane"></i>-->
+                          <!--                              </button>-->
+
+                          <!--                              <a href="<%#= forum_post_path(id: forum_post.forum_id, forum_post_id: forum_post.id) %>"></a>-->
+
+                        </div>
+                      </div>
+                    </div>
+
+-- code that will load the most recent comments as initual comments
+<script>
+  $(document).ready(function() {
+    loadInitialComments();
+
+  });
+
+  function loadInitialComments() {
+    var perPage = 6;
+
+    // Function to load previous comments
+    $("div.collapsible").each(function() {
+      var forumPostId = $(this).data("comments-container-id");
+      var currentTime = moment();
+      -- this can be modified according to how you are gettting your current user ID
+      var currentUser = <%= current_user.userId %> 
+
+        $.ajax({
+          type: "GET",
+          url: "<%= get_previous_comments_url %>",
+          dataType: "json",
+          data: {
+            forum_post_id: forumPostId,
+            per_page: perPage
+          },
+          success: function(data) {
+            if (data.comments.length > 0) {
+              var commentsContainer = $("div[data-comments-container-id='" + forumPostId + "']");
+              var previousCommentsContainer = $("div[data-previous-comments-id='" + forumPostId + "']");
+              previousCommentsContainer.empty();
+
+              // Prepend the previous comments to the container
+              data.comments.forEach(function(comment) {
+                var createdTimestamp = moment(comment.created_at);
+                var timeAgo = createdTimestamp.from(currentTime);
+                var name = comment.user.first_name + " " + comment.user.surname;
+
+               <%@all_post_comments.each do |post_comment| %>
+                var creators = [<%= post_comment.created_by %>];
+               if (creators.includes(comment.created_by) ) {
+
+                 var html = `
+                    <div class="d-flex pt-6">
+                      <!--begin::Avatar-->
+                      <div class="d-flex pt-2 pb-2">
+                        <div class="symbol symbol-30px symbol-circle me-5" style=" object-fit: cover;">
+                          <% if post_comment.post_comment_creator.user.profile_picture.attached?  %>
+                              <%= image_tag post_comment.post_comment_creator.user.profile_picture %>
+                            <% else %>
+                              <img src="/assets/images/icons/man-user.png" alt="user">
+                            <% end %>
+                        </div>
+                      </div>
+                      <!--end::Avatar-->
+                      <!--begin::Wrapper-->
+                      <div class="d-flex flex-column flex-row-fluid">
+                        <!--begin::Info-->
+                        <div class="d-flex align-items-center flex-wrap mb-0">
+                          <!-- You or Name -->
+                          ${comment.created_by === currentUser ?
+                   `<a href="#" class="text-gray-800 text-hover-primary fw-bold me-6">You</a>` :
+                   `<a href="#" class="text-gray-800 text-hover-primary fw-bold me-6">${name}</a>`
+                 }
+                          <!--end::Date-->
+                          <span class="text-gray-400 fw-semibold fs-7 me-5">
+                            ${timeAgo}
+                          </span>
+                        </div>
+                        <!--end::Info-->
+                        <!--begin::Text-->
+                        <span class="text-gray-800 fs-7 fw-normal pt-1">${comment.content}</span>
+                        <!--end::Text-->
+                      </div>
+                      <!--end::Wrapper-->
+                    </div>
+                    `;
+                 // console.log("creator is " + comment.created_by + "vs"+ currentUser);
+               }
+               <% end %>
+
+                previousCommentsContainer.append(html);
+              });
+
+              if(parseInt(data.page, 10) > 1) {
+                var newPage = String(parseInt(data.page, 10) - 1);
+                localStorage.setItem(`current-page-${forumPostId}`, newPage);
+                $("#show-recent-comments-button-" + forumPostId).addClass("d-none");
+                $("#show-previous-comments-button-" + forumPostId).show();
+              }else {
+                $("#show-previous-comments-button-" + forumPostId).hide();
+              }
+
+              commentsContainer.addClass("show");
+
+            } else {
+              $("#show-previous-comments-button-" + forumPostId).hide();
+              $("#show-recent-comments-button-" + forumPostId).addClass("d-none");
+            }
+            if (data.page === "1") {
+              $("#show-previous-comments-button-" + forumPostId).hide();
+              $("#show-recent-comments-button-" + forumPostId).addClass("d-none");
+            }
+          },
+          error: function(error) {
+            console.log(error);
+          }
+        });
+
+    });
+  }
+
+</script>
+-- ends here *********************************************************************************************
+
+-- your javascript to navigate throught the pages using: "Show previous Comments" and "Go to recent Comments" buttons
+<script>
+
+  $(document).on("click", "[id^='show-previous-comments-button-']", function() {
+    var perPage = 6;
+    var forumPostId = $(this).data("forum-post-id");
+    var currentPage = localStorage.getItem(`current-page-${forumPostId}`);
+    var currentTime = moment();
+    var currentUser = <%= current_user.alumni.alumni_id %>
+
+    // console.log("Clicked");
+    // console.log(currentPage);
+
+    // Function to load previous comments
+    $.ajax({
+      type: "GET",
+      url: "<%= get_previous_comments_url %>",
+      dataType: "json",
+      data: {
+        forum_post_id: forumPostId,
+        page: currentPage,
+        per_page: perPage
+      },
+      success: function(data) {
+        if (data.comments.length > 0) {
+          var commentsContainer = $("div[data-comments-container-id='" + forumPostId + "']");
+          var previousCommentsContainer = $("div[data-previous-comments-id='" + forumPostId + "']");
+          previousCommentsContainer.empty();
+
+          // Prepend the previous comments to the container
+          data.comments.forEach(function(comment) {
+            var createdTimestamp = moment(comment.created_at);
+            var timeAgo = createdTimestamp.from(currentTime);
+            var name = comment.user.first_name + " " + comment.user.surname;
+
+            <%@all_post_comments.each do |post_comment| %>
+            var creators = [<%= post_comment.created_by %>];
+            if (creators.includes(comment.created_by) ) {
+
+              var commentHTML = `<div class="d-flex pt-6">
+                        <!--begin::Avatar-->
+                        <div class="d-flex pt-2 pb-2">
+                          <div class="symbol symbol-30px symbol-circle me-5" style="object-fit: cover;">
+                             <% if post_comment.post_comment_creator.user.profile_picture.attached?  %>
+                              <%= image_tag post_comment.post_comment_creator.user.profile_picture %>
+                            <% else %>
+                              <img src="/assets/images/icons/man-user.png" alt="user">
+                            <% end %>
+                          </div>
+                        </div>
+                        <!--end::Avatar-->
+                        <!--begin::Wrapper-->
+                        <div class="d-flex flex-column flex-row-fluid">
+                          <!--begin::Info-->
+                          <div class="d-flex align-items-center flex-wrap mb-0">
+                            ${comment.created_by === currentUser ?
+                `<a href="#" class="text-gray-800 text-hover-primary fw-bold me-6">You</a>` :
+                `<a href="#" class="text-gray-800 text-hover-primary fw-bold me-6">${name}</a>`
+              }
+                            <!--begin::Date-->
+                            <span class="text-gray-400 fw-semibold fs-7 me-5">
+                              ${timeAgo}
+                            </span>
+                            <!--end::Date-->
+                          </div>
+                          <!--end::Info-->
+                          <!--begin::Text-->
+                          <span class="text-gray-800 fs-7 fw-normal pt-1">${comment.content}</span>
+                          <!--end::Text-->
+                        </div>
+                        <!--end::Wrapper-->
+                      </div>`;
+            }
+            <% end %>
+            previousCommentsContainer.append(commentHTML);
+          });
+
+          commentsContainer.addClass("show");
+
+        } else {
+          $("#show-previous-comments-button-" + forumPostId).hide();
+        }
+        if (currentPage > 1) {
+          currentPage--; // decrement currentPage here
+          localStorage.setItem(`current-page-${forumPostId}`, currentPage);
+          $("#show-recent-comments-button-" + forumPostId).addClass("d-none");
+        } else {
+          $("#show-previous-comments-button-" + forumPostId).hide();
+          $("#show-recent-comments-button-" + forumPostId).removeClass("d-none");
+        }
+      },
+      error: function(error) {
+        console.log(error);
+      }
+    });
+
+    // Initially hide the "Show Previous Comments" button if there are no previous comments
+    if (currentPage === "1") {
+      $("#show-previous-comments-button-" + forumPostId).hide();
+    }
+  });
+</script>
